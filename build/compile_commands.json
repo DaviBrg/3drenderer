@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/davi/Documents/repos/3drenderer/build",
+  "command": "/usr/bin/c++  -I/home/davi/Documents/repos/3drenderer/include -isystem /usr/include/SDL2 -g -std=gnu++20 -Wall -Wextra -Wpedantic -o CMakeFiles/SimpleGL.dir/src/main.cpp.o -c /home/davi/Documents/repos/3drenderer/src/main.cpp",
+  "file": "/home/davi/Documents/repos/3drenderer/src/main.cpp",
+  "output": "CMakeFiles/SimpleGL.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/davi/Documents/repos/3drenderer/build",
+  "command": "/usr/bin/c++  -I/home/davi/Documents/repos/3drenderer/include -isystem /usr/include/SDL2 -g -std=gnu++20 -Wall -Wextra -Wpedantic -o CMakeFiles/SimpleGL.dir/src/window.cpp.o -c /home/davi/Documents/repos/3drenderer/src/window.cpp",
+  "file": "/home/davi/Documents/repos/3drenderer/src/window.cpp",
+  "output": "CMakeFiles/SimpleGL.dir/src/window.cpp.o"
+}
+]

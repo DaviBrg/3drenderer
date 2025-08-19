@@ -1,0 +1,1 @@
+/usr/bin/cc -g CMakeFiles/3DRenderer.dir/src/main.c.o CMakeFiles/3DRenderer.dir/src/display.c.o -o 3DRenderer  /usr/lib/x86_64-linux-gnu/libSDL2.so 
