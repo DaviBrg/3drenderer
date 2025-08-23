@@ -39,7 +39,7 @@ std::optional<Window> Window::Create(int window_width, int window_height) {
     result._window_height = window_height;
     result._window_width = window_width;
 
-    // SDL_SetWindowFullscreen(result._window, SDL_WINDOW_FULLSCREEN);
+    SDL_SetWindowFullscreen(result._window, SDL_WINDOW_FULLSCREEN);
     
     return resultOpt;
 }
