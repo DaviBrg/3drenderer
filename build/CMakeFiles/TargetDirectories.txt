@@ -1,3 +1,0 @@
-/home/davi/Documents/repos/3drenderer/build/CMakeFiles/SimpleGL.dir
-/home/davi/Documents/repos/3drenderer/build/CMakeFiles/edit_cache.dir
-/home/davi/Documents/repos/3drenderer/build/CMakeFiles/rebuild_cache.dir
