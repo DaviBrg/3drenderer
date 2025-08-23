@@ -1,35 +1,32 @@
-cmake_minimum_required(VERSION 3.28)
+    cmake_minimum_required(VERSION 3.28)
 
-project (
-    SimpleGL
-    VERSION 0.1
-    LANGUAGES CXX
-)
+    project (
+        SimpleGL
+        VERSION 0.1
+        LANGUAGES CXX
+    )
 
-set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD 20)
 
-set(
-    INCLUDES
-    include/
-)
+    set (
+        SOURCES
+        src/main.cpp
+        src/window.cpp
+    )
 
-set (
-    SOURCES
-    src/main.cpp
-    src/window.cpp
-)
+    set (
+        EXECUTABLE
+        ${PROJECT_NAME}
+    )
 
-set (
-    EXECUTABLE
-    ${PROJECT_NAME}
-)
+    find_package(SDL2 REQUIRED)
 
-find_package(SDL2 REQUIRED)
+    add_executable(${EXECUTABLE} ${SOURCES})
 
-add_executable(${EXECUTABLE} ${INCLUDES} ${SOURCES})
+    target_include_directories(${EXECUTABLE} PRIVATE include)
 
-target_include_directories(${EXECUTABLE} PRIVATE ${INCLUDES})
+    target_link_libraries(${EXECUTABLE} PRIVATE SDL2::SDL2)
 
-target_link_libraries(${EXECUTABLE} PRIVATE SDL2::SDL2)
+    include_directories(${EXECUTABLE} ${SDL2_INCLUDE_DIRS})
 
-target_compile_options(${EXECUTABLE} PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(${EXECUTABLE} PRIVATE -Wall -Wextra -Wpedantic)
