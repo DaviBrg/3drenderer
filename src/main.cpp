@@ -12,6 +12,7 @@ namespace
 constexpr double fov_factor = 640.0;
 constexpr unsigned target_fps = 60;
 constexpr auto target_fps_time = std::chrono::milliseconds(1000/target_fps);
+constexpr uint32_t colorYellow = 0xFFFFFF00;
 std::vector<simplegl::point3_t> pointsToProject;
 std::vector<simplegl::point2_t> pointsToDraw;
 simplegl::point3_t camera_position = {0.0, 0.0, -5.0};
@@ -129,15 +130,42 @@ void render(simplegl::Window & window) {
 
     window.drawGrid(12);
 
-    for (simplegl::point2_t const & pointToDraw : pointsToDraw) {
-        window.drawRectangle(
-            pointToDraw.x + window.width()/2,
-            -pointToDraw.y + window.height()/2,
-            4,
-            4,
-            0xFFFFFF00
-        );
+    // for (simplegl::point2_t const & pointToDraw : pointsToDraw) {
+        // window.drawPixel(pointToDraw.x + window.width()/2,
+        //     pointToDraw.y + window.height()/2,0xFFFFFF00);
+        
+    // }
+
+
+    // for (simplegl::point2_t const & pointToDraw : pointsToDraw) {
+    //     window.drawRectangle(
+    //         pointToDraw.x + window.width()/2,
+    //         pointToDraw.y + window.height()/2,
+    //         4,
+    //         4,
+    //         0xFFFFFF00
+    //     );
+    // }
+
+
+
+    const int widhtDividedBy2 = window.width()/2;
+    const int heightDividedBy2 = window.height()/2;
+    for (unsigned i = 0; i < pointsToDraw.size(); i+=3) {
+
+        const int x0 = pointsToDraw[i].x + widhtDividedBy2;
+        const int x1 = pointsToDraw[i + 1].x + widhtDividedBy2;
+        const int x2 = pointsToDraw[i + 2].x + widhtDividedBy2;
+
+        const int y0 = pointsToDraw[i].y + heightDividedBy2;
+        const int y1 = pointsToDraw[i + 1].y + heightDividedBy2;
+        const int y2 = pointsToDraw[i + 2].y + heightDividedBy2;
+
+        window.drawLine(x0, y0, x1, y1, colorYellow);
+        window.drawLine(x1, y1, x2, y2, colorYellow);
+        window.drawLine(x2, y2, x0, y0, colorYellow);
     }
+    
 
     window.renderColorBuffer();
     window.clearColorBuffer(0xFF000000);
@@ -154,7 +182,7 @@ void waitFrameTime(std::chrono::system_clock::time_point start_time_point, std::
 
 int main() {
 
-    auto mesh = buildSphereMesh(6);
+    auto mesh = buildSphereMesh(5);
 
     pointsToProject = mesh.vertexes();
 

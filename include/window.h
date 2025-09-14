@@ -25,6 +25,8 @@ void drawGrid(int multiple);
 
 void drawRectangle(int x_pos, int y_pos, int width, int height, uint32_t color);
 
+void drawLine(int x0, int y0, int x1, int y1, uint32_t color);
+
 void renderPresent();
 
 int width() const {

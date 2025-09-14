@@ -62,7 +62,8 @@ void Window::setupDrawingBuffer() {
 }
 
 void Window::drawPixel(int x, int y, uint32_t pixel_value) {
-     if ((x >= 0) && (x < _window_width) && (y >= 0) && (y < _window_height)) {
+    y = _window_height - 1 - y; 
+    if ((x >= 0) && (x < _window_width) && (y >= 0) && (y < _window_height)) {
         _color_buffer[(_window_width * y) + x] = pixel_value;
     }
 }
@@ -110,6 +111,23 @@ void Window::drawRectangle(int x_pos, int y_pos, int width, int height, uint32_t
             drawPixel(x, y, color);
         }
     }
+}
+
+void Window::drawLine(int x0, int y0, int x1, int y1, uint32_t color) {
+    int sideX = std::abs(x1 - x0);
+    int sideY = std::abs(y1 - y0);
+
+    int sideLength = sideX >= sideY ? sideX : sideY;
+
+    double stepX = (x1 - x0) / static_cast<double>(sideLength);
+    double stepY = (y1 - y0) / static_cast<double>(sideLength);
+
+    for (int i = 0; i < sideLength; ++i) {
+        int x = x0 + std::round(i*stepX);
+        int y = y0 + std::round(i*stepY);
+        drawPixel(x,y,color);
+    }
+
 }
 
 void Window::renderPresent() {
