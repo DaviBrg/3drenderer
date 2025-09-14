@@ -1,23 +1,62 @@
 #include <chrono>
 #include <cmath>
+#include <numbers>
 #include <thread>
 
+#include "mesh.h"
 #include "window.h"
 #include "vec.h"
 
-
 namespace
 {
-constexpr int N_POINTS = 9*9*9;
 constexpr double fov_factor = 640.0;
 constexpr unsigned target_fps = 60;
 constexpr auto target_fps_time = std::chrono::milliseconds(1000/target_fps);
-simplegl::point3_t cube_points[N_POINTS] = {};
-simplegl::point2_t projected_points[N_POINTS] = {};
+std::vector<simplegl::point3_t> pointsToProject;
+std::vector<simplegl::point2_t> pointsToDraw;
 simplegl::point3_t camera_position = {0.0, 0.0, -5.0};
 }
 
-void process_input(bool& keep_runing) {
+simplegl::vec3_t getPointFromUV(double u, double v) {
+    const double cosU = std::cos(u);
+    return simplegl::vec3_t{
+        cosU*std::cos(v),
+        std::sin(u),
+        cosU*std::sin(v)};
+}
+
+simplegl::Mesh buildSphereMesh(unsigned int geometryLevel) {
+    auto result = simplegl::Mesh();
+    constexpr double uStart = std::numbers::pi*0.5;
+    constexpr double vStart = 0.0;
+    double step = (std::numbers::pi)/geometryLevel;
+
+    double previousU = uStart;
+    double previousV = vStart;
+
+    for (unsigned int uIdx = 1; uIdx <= geometryLevel; ++uIdx) {
+
+        const double u = uStart - (uIdx*step);
+
+        for (unsigned int vIdx = 1; vIdx <= geometryLevel*2; ++vIdx) {
+
+            const double v = vStart + (vIdx*step);
+
+            const auto triangle1 = simplegl::Triangle{getPointFromUV(previousU, previousV), getPointFromUV(previousU, v), getPointFromUV(u, v)};
+            result.addTriangle(triangle1);
+
+            const auto triangle2 = simplegl::Triangle{getPointFromUV(u, v), getPointFromUV(u, previousV), getPointFromUV(previousU, previousV)};
+            result.addTriangle(triangle2);
+
+            previousV = v;
+        }
+        previousU = u;
+    }
+
+    return result;
+}
+
+void processInput(bool& keep_runing) {
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
@@ -53,35 +92,34 @@ simplegl::point3_t scale(simplegl::point3_t const& point, double factor) {
     return projected_point;
 }
 
-simplegl::point3_t rotate_x(simplegl::point3_t const& point, double angle) {
+simplegl::point3_t rotateX(simplegl::point3_t const& point, double angle) {
     simplegl::point3_t projected_point = {point.x, std::sin(-angle)*point.z + std::cos(-angle)*point.y, std::cos(-angle)*point.z - std::sin(-angle)*point.y};
     return projected_point;
 }
 
-simplegl::point3_t rotate_y(simplegl::point3_t const& point, double angle) {
+simplegl::point3_t rotateY(simplegl::point3_t const& point, double angle) {
     simplegl::point3_t projected_point = {std::sin(angle)*point.z + std::cos(angle)*point.x, point.y, std::cos(angle)*point.z - std::sin(angle)*point.x};
     return projected_point;
 }
 
-simplegl::point3_t rotate_z(simplegl::point3_t const& point, double angle) {
+simplegl::point3_t rotateZ(simplegl::point3_t const& point, double angle) {
     simplegl::point3_t projected_point = {std::cos(angle)*point.x - std::sin(angle)*point.y, std::sin(angle)*point.x + std::cos(angle)*point.y, point.z};
     return projected_point;
 }
 
 void update() {
     static double t = 0;
-    for (int i = 0; i < N_POINTS; ++i) {
-        simplegl::point3_t point = cube_points[i];
-        point = rotate_x(point, t);
-        point = rotate_y(point, t);
-        point = rotate_z(point, t);
+    pointsToDraw.clear();
+    for (simplegl::point3_t point : pointsToProject) {
+
+        point = rotateX(point, t);
+        point = rotateY(point, t);
+        point = rotateZ(point, t);
         point = scale(point, std::abs(::cos(t)) + 0.25);
         point = translate(point, 2*std::cos(t), 2*std::sin(t), 0.0);
-
         point.z -= camera_position.z;
 
-        simplegl::point2_t projected_point = project(point);
-        projected_points[i] = projected_point;
+        pointsToDraw.emplace_back(project(point));
     }
     t += 0.0125;
 
@@ -91,10 +129,10 @@ void render(simplegl::Window & window) {
 
     window.drawGrid(12);
 
-    for (int i = 0; i < N_POINTS; ++i) {
+    for (simplegl::point2_t const & pointToDraw : pointsToDraw) {
         window.drawRectangle(
-            projected_points[i].x + window.width()/2,
-            -projected_points[i].y + window.height()/2,
+            pointToDraw.x + window.width()/2,
+            -pointToDraw.y + window.height()/2,
             4,
             4,
             0xFFFFFF00
@@ -106,8 +144,8 @@ void render(simplegl::Window & window) {
     window.renderPresent();
 }
 
-void wait_frame_time(std::chrono::system_clock::time_point  time_start, std::chrono::milliseconds target_fps_time) {
-    auto processing_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - time_start);
+void waitFrameTime(std::chrono::system_clock::time_point start_time_point, std::chrono::milliseconds target_fps_time) {
+    auto processing_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_point);
         if (processing_time < target_fps_time) {
             auto remaining_time = target_fps_time - processing_time;
             std::this_thread::sleep_for(remaining_time);
@@ -116,15 +154,9 @@ void wait_frame_time(std::chrono::system_clock::time_point  time_start, std::chr
 
 int main() {
 
-    int point_counter = 0;
-    for (float x = -1; x <= 1; x += 0.25) {
-        for (float y = -1; y <= 1; y += 0.25) {
-            for (float z = -1; z <= 1; z += 0.25) {
-                simplegl::point3_t point = {x, y, z};
-                cube_points[point_counter++] = point;
-            }
-        }
-    }
+    auto mesh = buildSphereMesh(6);
+
+    pointsToProject = mesh.vertexes();
 
     auto window_opt = simplegl::Window::Create(1920,1080);
     bool keep_running = window_opt.has_value();
@@ -138,13 +170,11 @@ int main() {
 
     while(keep_running)
     {
-        auto time_start = std::chrono::system_clock::now();
-        process_input(keep_running);
+        auto start_time_point = std::chrono::system_clock::now();
+        processInput(keep_running);
         update();
         render(window);
-        wait_frame_time(time_start, target_fps_time);
-
-        
+        waitFrameTime(start_time_point, target_fps_time);
     }
 
     
