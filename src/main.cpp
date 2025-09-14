@@ -9,13 +9,19 @@
 
 namespace
 {
-constexpr double fov_factor = 640.0;
-constexpr unsigned target_fps = 60;
-constexpr auto target_fps_time = std::chrono::milliseconds(1000/target_fps);
+
+constexpr double fovFactor = 640.0;
+constexpr unsigned targetFps = 60;
+constexpr auto targetFpsTime = std::chrono::milliseconds(1000/targetFps);
+constexpr int windowWidth = 1920;
+constexpr int windowHeight = 1080;
 constexpr uint32_t colorYellow = 0xFFFFFF00;
+constexpr uint32_t colorGreen = 0xFF00FF00;
+
 std::vector<simplegl::point3_t> pointsToProject;
 std::vector<simplegl::point2_t> pointsToDraw;
 simplegl::point3_t camera_position = {0.0, 0.0, -5.0};
+
 }
 
 simplegl::vec3_t getPointFromUV(double u, double v) {
@@ -74,7 +80,7 @@ void processInput(bool& keep_runing) {
 }
 
 simplegl::point2_t project(simplegl::point3_t const& point) {
-    simplegl::point2_t projected_point = {(fov_factor * point.x)/point.z,(fov_factor * point.y)/point.z};
+    simplegl::point2_t projected_point = {(fovFactor * point.x)/point.z,(fovFactor * point.y)/point.z};
     return projected_point;
 }
 
@@ -110,6 +116,8 @@ simplegl::point3_t rotateZ(simplegl::point3_t const& point, double angle) {
 
 void update() {
     static double t = 0;
+    const int widhtDividedBy2 = windowWidth/2;
+    const int heightDividedBy2 = windowHeight/2;
     pointsToDraw.clear();
     for (simplegl::point3_t point : pointsToProject) {
 
@@ -118,9 +126,16 @@ void update() {
         point = rotateZ(point, t);
         point = scale(point, std::abs(::cos(t)) + 0.25);
         point = translate(point, 2*std::cos(t), 2*std::sin(t), 0.0);
-        point.z -= camera_position.z;
 
-        pointsToDraw.emplace_back(project(point));
+        // Put camera at distance 5 from the origin
+        point = translate(point,0 , 0, -camera_position.z);
+
+        // Bring origin to the center of the screen
+        auto projectedPoint = project(point);
+        projectedPoint.x += widhtDividedBy2;
+        projectedPoint.y += heightDividedBy2;
+
+        pointsToDraw.emplace_back(projectedPoint);
     }
     t += 0.0125;
 
@@ -129,41 +144,27 @@ void update() {
 void render(simplegl::Window & window) {
 
     window.drawGrid(12);
-
-    // for (simplegl::point2_t const & pointToDraw : pointsToDraw) {
-        // window.drawPixel(pointToDraw.x + window.width()/2,
-        //     pointToDraw.y + window.height()/2,0xFFFFFF00);
-        
-    // }
-
-
-    // for (simplegl::point2_t const & pointToDraw : pointsToDraw) {
-    //     window.drawRectangle(
-    //         pointToDraw.x + window.width()/2,
-    //         pointToDraw.y + window.height()/2,
-    //         4,
-    //         4,
-    //         0xFFFFFF00
-    //     );
-    // }
-
-
-
-    const int widhtDividedBy2 = window.width()/2;
-    const int heightDividedBy2 = window.height()/2;
+    
     for (unsigned i = 0; i < pointsToDraw.size(); i+=3) {
 
-        const int x0 = pointsToDraw[i].x + widhtDividedBy2;
-        const int x1 = pointsToDraw[i + 1].x + widhtDividedBy2;
-        const int x2 = pointsToDraw[i + 2].x + widhtDividedBy2;
+        window.drawTriagnle(
+            pointsToDraw[i].x,
+            pointsToDraw[i].y,
+            pointsToDraw[i + 1].x,
+            pointsToDraw[i + 1].y,
+            pointsToDraw[i + 2].x,
+            pointsToDraw[i + 2].y,
+            colorGreen);
+    }
 
-        const int y0 = pointsToDraw[i].y + heightDividedBy2;
-        const int y1 = pointsToDraw[i + 1].y + heightDividedBy2;
-        const int y2 = pointsToDraw[i + 2].y + heightDividedBy2;
-
-        window.drawLine(x0, y0, x1, y1, colorYellow);
-        window.drawLine(x1, y1, x2, y2, colorYellow);
-        window.drawLine(x2, y2, x0, y0, colorYellow);
+    for (simplegl::point2_t const & pointToDraw : pointsToDraw) {
+        window.drawRectangle(
+            pointToDraw.x,
+            pointToDraw.y,
+            4,
+            4,
+            colorYellow
+        );
     }
     
 
@@ -182,11 +183,11 @@ void waitFrameTime(std::chrono::system_clock::time_point start_time_point, std::
 
 int main() {
 
-    auto mesh = buildSphereMesh(5);
+    auto mesh = buildSphereMesh(10);
 
     pointsToProject = mesh.vertexes();
 
-    auto window_opt = simplegl::Window::Create(1920,1080);
+    auto window_opt = simplegl::Window::Create(windowWidth, windowHeight);
     bool keep_running = window_opt.has_value();
 
     if (!keep_running) {
@@ -202,7 +203,7 @@ int main() {
         processInput(keep_running);
         update();
         render(window);
-        waitFrameTime(start_time_point, target_fps_time);
+        waitFrameTime(start_time_point, targetFpsTime);
     }
 
     
