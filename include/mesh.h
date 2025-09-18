@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <vector>
 
 #include "triangle.h"
@@ -8,15 +9,15 @@
 namespace simplegl
 {
 
-struct Face {
-    unsigned int a = 0;
-    unsigned int b = 0;
-    unsigned int c = 0;
-};
+using Face = std::array<int,3>;
 
 class Mesh {
 
 public:
+
+    static Mesh buildSphere(unsigned int geometryLevel);
+
+    static Mesh buildCylinder(unsigned int geometryLevel);
 
     std::vector<vec3_t> const & vertexes() const {
         return _vertexes;
@@ -26,21 +27,11 @@ public:
         return _faces;
     }
 
-    void addVertex(vec3_t const & vertex) {
-        _vertexes.emplace_back(vertex);
-    }
+    void addVertex(vec3_t const & vertex);
 
-    void addFace(Face const & face) {
-        _faces.emplace_back(face);
-    }
+    void addFace(Face const & face);
 
-    void addTriangle(Triangle triangle) {
-        unsigned int numFaces = _faces.size();
-        addVertex(triangle.a);
-        addVertex(triangle.b);
-        addVertex(triangle.c);
-        addFace(Face{numFaces, numFaces + 1, numFaces + 2});
-    }
+    void addTriangle(Triangle const & triangle);
 
 private:
     std::vector<vec3_t> _vertexes;

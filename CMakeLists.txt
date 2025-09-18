@@ -11,6 +11,8 @@
     set (
         SOURCES
         src/main.cpp
+        src/mesh.cpp
+        src/objloader.cpp
         src/window.cpp
     )
 

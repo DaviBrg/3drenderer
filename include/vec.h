@@ -26,4 +26,20 @@ struct camera_t {
     double pov;
 };
 
+inline vec3_t operator+(vec3_t lhs, vec3_t rhs) {
+    return vec3_t{
+        lhs.x + rhs.x,
+        lhs.y + rhs.y,
+        lhs.z + rhs.z
+    };
+}
+
+inline vec3_t operator-(vec3_t lhs, vec3_t rhs) {
+    return vec3_t{
+        lhs.x - rhs.x,
+        lhs.y - rhs.y,
+        lhs.z - rhs.z
+    };
+}
+
 }

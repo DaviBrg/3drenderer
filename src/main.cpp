@@ -3,7 +3,7 @@
 #include <numbers>
 #include <thread>
 
-#include "mesh.h"
+#include "objloader.h"
 #include "window.h"
 #include "vec.h"
 
@@ -13,55 +13,28 @@ namespace
 constexpr double fovFactor = 640.0;
 constexpr unsigned targetFps = 60;
 constexpr auto targetFpsTime = std::chrono::milliseconds(1000/targetFps);
-constexpr int windowWidth = 1920;
-constexpr int windowHeight = 1080;
-constexpr uint32_t colorYellow = 0xFFFFFF00;
+constexpr int windowWidth = 1920; // max: 3840
+constexpr int windowHeight = 1080; // max: 2160
 constexpr uint32_t colorGreen = 0xFF00FF00;
 
-std::vector<simplegl::point3_t> pointsToProject;
-std::vector<simplegl::point2_t> pointsToDraw;
+std::vector<simplegl::point2_t> vertexesToRender;
 simplegl::point3_t camera_position = {0.0, 0.0, -5.0};
 
+simplegl::Mesh const & getMeshToRender() {
+    static simplegl::Mesh const meshToRender = [](){
+        auto opt = simplegl::ObjLoader::load("../objects/myobj.obj");
+        return opt.has_value() ? opt.value() : simplegl::Mesh{};
+        // return simplegl::Mesh::buildCylinder(4);
+        // return simplegl::Mesh::buildSphere(8);
+    }();
+    return meshToRender;
 }
 
-simplegl::vec3_t getPointFromUV(double u, double v) {
-    const double cosU = std::cos(u);
-    return simplegl::vec3_t{
-        cosU*std::cos(v),
-        std::sin(u),
-        cosU*std::sin(v)};
 }
 
-simplegl::Mesh buildSphereMesh(unsigned int geometryLevel) {
-    auto result = simplegl::Mesh();
-    constexpr double uStart = std::numbers::pi*0.5;
-    constexpr double vStart = 0.0;
-    double step = (std::numbers::pi)/geometryLevel;
+// simplegl::Mesh meshToRender = buildSphereMesh(4);
+// simplegl::Mesh meshToRender = buildCylinderMesh(8);
 
-    double previousU = uStart;
-    double previousV = vStart;
-
-    for (unsigned int uIdx = 1; uIdx <= geometryLevel; ++uIdx) {
-
-        const double u = uStart - (uIdx*step);
-
-        for (unsigned int vIdx = 1; vIdx <= geometryLevel*2; ++vIdx) {
-
-            const double v = vStart + (vIdx*step);
-
-            const auto triangle1 = simplegl::Triangle{getPointFromUV(previousU, previousV), getPointFromUV(previousU, v), getPointFromUV(u, v)};
-            result.addTriangle(triangle1);
-
-            const auto triangle2 = simplegl::Triangle{getPointFromUV(u, v), getPointFromUV(u, previousV), getPointFromUV(previousU, previousV)};
-            result.addTriangle(triangle2);
-
-            previousV = v;
-        }
-        previousU = u;
-    }
-
-    return result;
-}
 
 void processInput(bool& keep_runing) {
     SDL_Event event;
@@ -118,24 +91,28 @@ void update() {
     static double t = 0;
     const int widhtDividedBy2 = windowWidth/2;
     const int heightDividedBy2 = windowHeight/2;
-    pointsToDraw.clear();
-    for (simplegl::point3_t point : pointsToProject) {
+    vertexesToRender.clear();
 
-        point = rotateX(point, t);
-        point = rotateY(point, t);
-        point = rotateZ(point, t);
-        point = scale(point, std::abs(::cos(t)) + 0.25);
-        point = translate(point, 2*std::cos(t), 2*std::sin(t), 0.0);
+    for (simplegl::Face const & face : getMeshToRender().faces()) {
+        for (int faceIdx : face) {
+            simplegl::point3_t vertex = getMeshToRender().vertexes()[faceIdx];
 
-        // Put camera at distance 5 from the origin
-        point = translate(point,0 , 0, -camera_position.z);
+            // vertex = scale(vertex, 2);
+            vertex = rotateX(vertex, t);
+            vertex = rotateY(vertex, t);
+            vertex = rotateZ(vertex, t);
+            vertex = translate(vertex, 2*std::cos(t), 2*std::sin(t), 0.0);
 
-        // Bring origin to the center of the screen
-        auto projectedPoint = project(point);
-        projectedPoint.x += widhtDividedBy2;
-        projectedPoint.y += heightDividedBy2;
+            // Put camera at distance 5 from the origin
+            vertex = translate(vertex, 0 , 0, -camera_position.z);
 
-        pointsToDraw.emplace_back(projectedPoint);
+            // Bring origin to the center of the screen
+            auto projectedVertex = project(vertex);
+            projectedVertex.x += widhtDividedBy2;
+            projectedVertex.y += heightDividedBy2;
+
+            vertexesToRender.emplace_back(projectedVertex);
+        }
     }
     t += 0.0125;
 
@@ -145,27 +122,26 @@ void render(simplegl::Window & window) {
 
     window.drawGrid(12);
     
-    for (unsigned i = 0; i < pointsToDraw.size(); i+=3) {
-
+    for (unsigned i = 0; i < vertexesToRender.size(); i+=3) {
         window.drawTriagnle(
-            pointsToDraw[i].x,
-            pointsToDraw[i].y,
-            pointsToDraw[i + 1].x,
-            pointsToDraw[i + 1].y,
-            pointsToDraw[i + 2].x,
-            pointsToDraw[i + 2].y,
+            vertexesToRender[i].x,
+            vertexesToRender[i].y,
+            vertexesToRender[i + 1].x,
+            vertexesToRender[i + 1].y,
+            vertexesToRender[i + 2].x,
+            vertexesToRender[i + 2].y,
             colorGreen);
     }
 
-    for (simplegl::point2_t const & pointToDraw : pointsToDraw) {
-        window.drawRectangle(
-            pointToDraw.x,
-            pointToDraw.y,
-            4,
-            4,
-            colorYellow
-        );
-    }
+    // for (simplegl::point2_t const & pointToDraw : vertexesToRender) {
+    //     window.drawRectangle(
+    //         pointToDraw.x,
+    //         pointToDraw.y,
+    //         4,
+    //         4,
+    //         colorYellow
+    //     );
+    // }
     
 
     window.renderColorBuffer();
@@ -183,9 +159,8 @@ void waitFrameTime(std::chrono::system_clock::time_point start_time_point, std::
 
 int main() {
 
-    auto mesh = buildSphereMesh(10);
-
-    pointsToProject = mesh.vertexes();
+    simplegl::Mesh meshToRender = simplegl::ObjLoader::load("/Users/davibragagomes/Documents/Repositories/3drenderer/objects/teapot.obj").value();
+    
 
     auto window_opt = simplegl::Window::Create(windowWidth, windowHeight);
     bool keep_running = window_opt.has_value();
@@ -205,6 +180,7 @@ int main() {
         render(window);
         waitFrameTime(start_time_point, targetFpsTime);
     }
+
 
     
     return 0;
