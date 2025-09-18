@@ -23,7 +23,7 @@ simplegl::point3_t camera_position = {0.0, 0.0, -5.0};
 simplegl::Mesh const & getMeshToRender() {
     static simplegl::Mesh const meshToRender = [](){
         auto opt = simplegl::ObjLoader::load("../objects/myobj.obj");
-        return opt.has_value() ? opt.value() : simplegl::Mesh{};
+        return opt.has_value() ? opt.value() : simplegl::Mesh::buildCylinder(4);
         // return simplegl::Mesh::buildCylinder(4);
         // return simplegl::Mesh::buildSphere(8);
     }();
@@ -31,10 +31,6 @@ simplegl::Mesh const & getMeshToRender() {
 }
 
 }
-
-// simplegl::Mesh meshToRender = buildSphereMesh(4);
-// simplegl::Mesh meshToRender = buildCylinderMesh(8);
-
 
 void processInput(bool& keep_runing) {
     SDL_Event event;
@@ -133,17 +129,6 @@ void render(simplegl::Window & window) {
             colorGreen);
     }
 
-    // for (simplegl::point2_t const & pointToDraw : vertexesToRender) {
-    //     window.drawRectangle(
-    //         pointToDraw.x,
-    //         pointToDraw.y,
-    //         4,
-    //         4,
-    //         colorYellow
-    //     );
-    // }
-    
-
     window.renderColorBuffer();
     window.clearColorBuffer(0xFF000000);
     window.renderPresent();
@@ -158,10 +143,6 @@ void waitFrameTime(std::chrono::system_clock::time_point start_time_point, std::
 }
 
 int main() {
-
-    simplegl::Mesh meshToRender = simplegl::ObjLoader::load("/Users/davibragagomes/Documents/Repositories/3drenderer/objects/teapot.obj").value();
-    
-
     auto window_opt = simplegl::Window::Create(windowWidth, windowHeight);
     bool keep_running = window_opt.has_value();
 
@@ -180,8 +161,6 @@ int main() {
         render(window);
         waitFrameTime(start_time_point, targetFpsTime);
     }
-
-
     
     return 0;
 }
