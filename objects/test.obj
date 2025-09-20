@@ -1,0 +1,56 @@
+# Wavefront OBJ file for a square-based pyramid
+# Created by Gemini on September 20, 2025
+#
+# This model contains vertex, texture coordinate, and normal data.
+# The geometry is a 2x2 unit base on the XZ plane, centered at the origin,
+# with an apex 1 unit high on the Y-axis.
+# This version uses only triangles.
+
+# -- Vertices (v) --
+# Total: 5 vertices
+# Format: v x y z
+v -1.0 -1.0 1.0   # Vertex 1: base, front-left
+v 1.0 -1.0 1.0    # Vertex 2: base, front-right
+v 1.0 -1.0 -1.0   # Vertex 3: base, back-right
+v -1.0 -1.0 -1.0  # Vertex 4: base, back-left
+v 0.0 1.0 0.0     # Vertex 5: apex (top point)
+
+# -- Texture Coordinates (vt) --
+# Total: 8 coordinates
+# This layout corresponds to a cross-shaped "unwrapped" texture map.
+# Format: vt u v
+vt 0.25 0.25  # UV 1: for base, front-left
+vt 0.75 0.25  # UV 2: for base, front-right
+vt 0.75 0.75  # UV 3: for base, back-right
+vt 0.25 0.75  # UV 4: for base, back-left
+vt 0.5 1.0    # UV 5: apex, for front face
+vt 1.0 0.5    # UV 6: apex, for right face
+vt 0.5 0.0    # UV 7: apex, for back face
+vt 0.0 0.5    # UV 8: apex, for left face
+
+# -- Normals (vn) --
+# Total: 5 normals (one for each face), pre-normalized.
+# Format: vn x y z
+vn 0.0 -1.0 0.0      # Normal 1: base face (pointing down)
+vn 0.0 0.4472 0.8944  # Normal 2: front face
+vn 0.8944 0.4472 0.0  # Normal 3: right face
+vn 0.0 0.4472 -0.8944 # Normal 4: back face
+vn -0.8944 0.4472 0.0 # Normal 5: left face
+
+# -- Faces (f) --
+# Total: 6 faces (all triangles)
+# Format: f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3
+
+# Base faces (split from one quad into two triangles)
+# Both triangles share the same downward-facing normal (vn1).
+f 1/1/1 2/2/1 3/3/1
+f 1/1/1 3/3/1 4/4/1
+
+# The four triangular side faces
+# Each face points to its own normal for flat shading.
+f 1/1/2 5/5/2 2/2/2   # Front face
+f 2/2/3 5/6/3 3/3/3   # Right face
+f 3/3/4 5/7/4 4/4/4   # Back face
+f 4/4/5 5/8/5 1/1/5   # Left face
+
+# End of file

@@ -6,16 +6,16 @@ namespace simplegl
 {
 
 struct vec2_t {
-    double x;
-    double y;
+    double x = 0;
+    double y = 0;
 };
 
 using point2_t = vec2_t ;
 
 struct vec3_t {
-    double x;
-    double y;
-    double z;
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
 };
 
 using point3_t = vec3_t;

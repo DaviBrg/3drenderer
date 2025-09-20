@@ -1,3 +1,4 @@
+#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <numbers>
@@ -22,7 +23,8 @@ simplegl::point3_t camera_position = {0.0, 0.0, -5.0};
 
 simplegl::Mesh const & getMeshToRender() {
     static simplegl::Mesh const meshToRender = [](){
-        auto opt = simplegl::ObjLoader::load("../objects/myobj.obj");
+        auto opt = simplegl::ObjLoader::load("../objects/test.obj");
+        assert(opt.has_value());
         return opt.has_value() ? opt.value() : simplegl::Mesh::buildCylinder(4);
         // return simplegl::Mesh::buildCylinder(4);
         // return simplegl::Mesh::buildSphere(8);
@@ -90,8 +92,8 @@ void update() {
     vertexesToRender.clear();
 
     for (simplegl::Face const & face : getMeshToRender().faces()) {
-        for (int faceIdx : face) {
-            simplegl::point3_t vertex = getMeshToRender().vertexes()[faceIdx];
+        for (auto const & index : face.indexes) {
+            simplegl::point3_t vertex = getMeshToRender().vertices()[index.vertex];
 
             // vertex = scale(vertex, 2);
             vertex = rotateX(vertex, t);
