@@ -9,12 +9,18 @@
 namespace
 {
 
-std::vector<std::string_view> splitStrView(std::string_view str, char delimiter) {
+std::vector<std::string_view> splitStrView(std::string_view str, char delimiter, bool skipEmpty = true) {
     std::vector<std::string_view> result;
     result.reserve(4);
 
     for (auto it : std::views::split(str, delimiter)) {
-        result.emplace_back(std::string_view{it.begin(), it.end()});
+
+        auto sv = std::string_view{it.begin(), it.end()};
+        if (skipEmpty && sv.empty()) {
+            continue;
+        }
+
+        result.emplace_back(sv);
     }
 
     return result;
@@ -67,7 +73,7 @@ static std::optional<vec3_t> parseVec3FromSplitElements(std::vector<std::string_
         return vec3_t{
             xOpt.value(),
             yOpt.value(),
-            zOpt.value()
+            -zOpt.value()
         };
 
     } else {
@@ -78,7 +84,7 @@ static std::optional<vec3_t> parseVec3FromSplitElements(std::vector<std::string_
 
 static std::optional<VertexIndex> parseVertexIndexFromStrView(std::string_view sv) {
 
-    auto indexesStrView = splitStrView(sv, '/');
+    auto indexesStrView = splitStrView(sv, '/', false);
     
     VertexIndex vertexIndex;
 
@@ -156,22 +162,26 @@ static std::optional<Face> parseSimpleFaceFromSplitElements(std::vector<std::str
     }
 }
 
-static std::optional<Face> parseComplexFaceFromSplitElements(std::vector<std::string_view> const & elements) {
+static std::optional<Face> parseComplexFaceFromSplitElements(std::vector<std::string_view> const & elements, bool isQuad2ndTriangle = false) {
 
     if (hasElementWithSeparator(elements)) {
 
-        auto indexOpt1 = parseVertexIndexFromStrView(elements[1]);
-        auto indexOpt2 = parseVertexIndexFromStrView(elements[2]);
-        auto indexOpt3 = parseVertexIndexFromStrView(elements[3]);
+        int index1 = isQuad2ndTriangle ? 3 : 1;
+        int index2 = isQuad2ndTriangle ? 4 : 2;
+        int index3 = isQuad2ndTriangle ? 1 : 3;
+
+        auto indexOpt1 = parseVertexIndexFromStrView(elements[index1]);
+        auto indexOpt2 = parseVertexIndexFromStrView(elements[index2]);
+        auto indexOpt3 = parseVertexIndexFromStrView(elements[index3]);
 
         if (indexOpt1.has_value() &&
             indexOpt2.has_value() &&
             indexOpt3.has_value()) {
 
                 Face face;
-                face.indexes[0] = indexOpt1.value();
+                face.indexes[2] = indexOpt1.value();
                 face.indexes[1] = indexOpt2.value();
-                face.indexes[2] = indexOpt3.value();
+                face.indexes[0] = indexOpt3.value();
                 return face;
 
         } else {
@@ -237,7 +247,7 @@ std::optional<Mesh> ObjLoader::load(std::string_view path) {
             }
 
         } else
-        if (op == "f" && (splitElements.size() == 4 || splitElements.size() == 5)) {
+        if (op == "f" && splitElements.size() == 4) {
             auto optFace = parseComplexFaceFromSplitElements(splitElements);
             if (optFace.has_value()) {
                 result.addFace(optFace.value());
@@ -245,7 +255,19 @@ std::optional<Mesh> ObjLoader::load(std::string_view path) {
                 goto parseFailed;
             }
 
-        } else
+        }  else
+        if (op == "f" && splitElements.size() == 5) {
+            auto optFace1 = parseComplexFaceFromSplitElements(splitElements, false);
+            auto optFace2 = parseComplexFaceFromSplitElements(splitElements, true);
+
+            if (optFace1.has_value() && optFace2.has_value()) {
+                result.addFace(optFace1.value());
+                result.addFace(optFace2.value());
+            } else {
+                goto parseFailed;
+            }
+
+        }  else
          {
             ++lineNr;
             continue;

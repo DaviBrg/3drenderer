@@ -25,7 +25,7 @@ simplegl::Mesh const & getMeshToRender() {
     static simplegl::Mesh const meshToRender = [](){
         auto opt = simplegl::ObjLoader::load("../objects/test.obj");
         assert(opt.has_value());
-        return opt.has_value() ? opt.value() : simplegl::Mesh::buildCylinder(4);
+        return opt.value();
         // return simplegl::Mesh::buildCylinder(4);
         // return simplegl::Mesh::buildSphere(8);
     }();
@@ -91,11 +91,13 @@ void update() {
     const int heightDividedBy2 = windowHeight/2;
     vertexesToRender.clear();
 
-    for (simplegl::Face const & face : getMeshToRender().faces()) {
+    simplegl::Mesh const & meshToRender = getMeshToRender();
+    for (simplegl::Face const & face : meshToRender.faces()) {
         for (auto const & index : face.indexes) {
-            simplegl::point3_t vertex = getMeshToRender().vertices()[index.vertex];
+            simplegl::point3_t vertex = meshToRender.vertices()[index.vertex];
 
-            // vertex = scale(vertex, 2);
+            vertex = scale(vertex, 0.08);
+            vertex = rotateX(vertex, 3.1417/2.0);
             vertex = rotateX(vertex, t);
             vertex = rotateY(vertex, t);
             vertex = rotateZ(vertex, t);
