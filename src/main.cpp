@@ -19,6 +19,7 @@ constexpr int windowHeight = 1080; // max: 2160
 constexpr int widhtDividedBy2 = windowWidth/2;
 constexpr int heightDividedBy2 = windowHeight/2;
 constexpr uint32_t colorGreen = 0xFF00FF00;
+constexpr uint32_t colorYellow = 0xFFFFFF00;
 constexpr double rotationStep = 3.1417/96.0;
 int rotationXIndex = 0;
 int rotationYIndex = 0;
@@ -34,8 +35,8 @@ simplegl::Mesh const & getMeshToRender() {
         // auto opt = simplegl::ObjLoader::load("../objects/teapot.obj");
         // assert(opt.has_value());
         // return opt.value();
-        return simplegl::Mesh::buildCylinder(10);
-        // return simplegl::Mesh::buildSphere(8);
+        // return simplegl::Mesh::buildCylinder(10);
+        return simplegl::Mesh::buildSphere(8);
     }();
     return meshToRender;
 }
@@ -163,6 +164,10 @@ void render(simplegl::Window & window) {
             vertexesToRender[i + 2].x,
             vertexesToRender[i + 2].y,
             colorGreen);
+    }
+
+    for (unsigned i = 0; i < vertexesToRender.size(); ++i) {
+        window.drawRectangle(vertexesToRender[i].x - 2 , vertexesToRender[i].y - 2, 5, 5, colorYellow);
     }
 
     window.renderColorBuffer();
