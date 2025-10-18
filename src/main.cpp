@@ -42,7 +42,7 @@ simplegl::Mesh const & getMeshToRender() {
 
 }
 
-void processInput(bool& keep_runing, bool& pause) {
+void processInput(bool& keep_runing) {
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
@@ -132,8 +132,8 @@ void update() {
         // Face culling
         simplegl::vec3_t ab = transformedVertices[1] - transformedVertices[0];
         simplegl::vec3_t ac = transformedVertices[2] - transformedVertices[0];
-        simplegl::vec3_t normal = simplegl::cross(ab, ac);
-        simplegl::vec3_t triangleCamera = (camera_position - transformedVertices[0]);
+        simplegl::vec3_t normal = simplegl::cross(ab, ac).normalize();
+        simplegl::vec3_t triangleCamera = (camera_position - transformedVertices[0]).normalize();
         auto dotProduct = simplegl::dot(normal, triangleCamera);
         if (dotProduct < 0.0) {
             continue;
@@ -181,7 +181,6 @@ void waitFrameTime(std::chrono::system_clock::time_point start_time_point, std::
 int main() {
     auto window_opt = simplegl::Window::Create(windowWidth, windowHeight);
     bool keep_running = window_opt.has_value();
-    bool pause = false;
 
     if (!keep_running) {
         return 1;
@@ -193,11 +192,9 @@ int main() {
     while(keep_running)
     {
         auto start_time_point = std::chrono::system_clock::now();
-        processInput(keep_running, pause);
-        if (!pause) {
-            update();
-            render(window);
-        }
+        processInput(keep_running);
+        update();
+        render(window);
         waitFrameTime(start_time_point, targetFpsTime);
     }
     
