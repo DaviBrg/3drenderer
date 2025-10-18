@@ -26,14 +26,14 @@ Mesh Mesh::buildSphere(unsigned int geometryLevel)
 
     if (geometryLevel < 2) geometryLevel = 2;
 
-    constexpr double uStart = std::numbers::pi*0.5;
+    const double step = std::numbers::pi/geometryLevel;
+    const double uStart = std::numbers::pi*0.5 - step;
     constexpr double vStart = 0.0;
-    double step = (std::numbers::pi)/geometryLevel;
 
     double previousU = uStart;
     double previousV = vStart;
 
-    for (unsigned int uIdx = 1; uIdx <= geometryLevel; ++uIdx) {
+    for (unsigned int uIdx = 1; uIdx < geometryLevel - 1; ++uIdx) {
 
         const double u = uStart - (uIdx*step);
 
@@ -47,6 +47,20 @@ Mesh Mesh::buildSphere(unsigned int geometryLevel)
         }
         previousU = u;
     }
+
+    const vec3_t tipTop = {0.0, 1.0, 0.0};
+    const vec3_t tipBottom = {0.0, -1.0, 0.0};
+    const double uTop = uStart;
+    const double uBottom = -std::numbers::pi*0.5 + step;
+
+    previousV = vStart;
+    for (unsigned int vIdx = 1; vIdx <= geometryLevel*2; ++vIdx) {
+
+            const double v = vStart + (vIdx*step);
+            result.addSimpleTriangle(tipTop, getPointFromUV(uTop, v), getPointFromUV(uTop, previousV));
+            result.addSimpleTriangle(tipBottom, getPointFromUV(uBottom, previousV), getPointFromUV(uBottom, v));
+            previousV = v;
+        }
 
     return result;
 }
