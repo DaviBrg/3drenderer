@@ -39,11 +39,11 @@ simplegl::vec3_t camera_position = {0.0, 0.0, 0.0};
 
 simplegl::Mesh const & getMeshToRender() {
     static simplegl::Mesh const meshToRender = [](){
-        // auto opt = simplegl::ObjLoader::load("../objects/teapot.obj");
-        // assert(opt.has_value());
-        // return opt.value();
-        // return simplegl::Mesh::buildCylinder(4);
-        return simplegl::Mesh::buildSphere(5);
+        auto opt = simplegl::ObjLoader::load("../objects/teapot.obj");
+        assert(opt.has_value());
+        return opt.value();
+        // return simplegl::Mesh::buildCylinder(10);
+        // return simplegl::Mesh::buildSphere(5);
     }();
     return meshToRender;
 }

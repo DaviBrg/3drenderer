@@ -179,11 +179,18 @@ void Window::fillTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32
         std::swap(y0, y1);
     }
 
+    if (y0 == y1) {
+        fillFlatTopTriangle(x1, y1, x0, y0, x2, y2, color);    
+    } else if (y2 == y1) {
+        fillFlatBottomTriangle(x0, y0, x1, y1, x2, y2, color);
+    } else {
     const double mx = x0 + (static_cast<double>((x2 - x0) * (y1 - y0)) / ( y2 - y0)) ;
     const double my = y1;
 
     fillFlatBottomTriangle(x0, y0, x1, y1, mx, my, color);
     fillFlatTopTriangle(x1, y1, mx, my, x2, y2, color);
+    }
+    
 }
 
 // Flat bottom triangle looks like this:
