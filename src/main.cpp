@@ -18,13 +18,20 @@ constexpr int windowWidth = 1920; // max: 3840
 constexpr int windowHeight = 1080; // max: 2160
 constexpr int widhtDividedBy2 = windowWidth/2;
 constexpr int heightDividedBy2 = windowHeight/2;
+constexpr uint32_t colorBlue = 0xFF0000FF;
 constexpr uint32_t colorGreen = 0xFF00FF00;
 constexpr uint32_t colorYellow = 0xFFFFFF00;
-constexpr double rotationStep = 3.1417/96.0;
+constexpr uint32_t colorWhite = 0xFFFFFFFF;
+constexpr uint32_t colorGray = 0xFFAAAAAA;
+constexpr double rotationStep = 3.1417/64.0;
+constexpr double defaultZoom = 1.0;
+constexpr double zoomStep = 0.033333;
 int rotationXIndex = 0;
 int rotationYIndex = 0;
+int zoomIndex = 0;
 double rotationX = 0;
 double rotationY = 0;
+double zoom = 1.0;
 std::array<simplegl::vec3_t,3> transformedVertices = {};
 
 std::vector<simplegl::vec2_t> vertexesToRender;
@@ -35,8 +42,8 @@ simplegl::Mesh const & getMeshToRender() {
         // auto opt = simplegl::ObjLoader::load("../objects/teapot.obj");
         // assert(opt.has_value());
         // return opt.value();
-        // return simplegl::Mesh::buildCylinder(10);
-        return simplegl::Mesh::buildSphere(8);
+        // return simplegl::Mesh::buildCylinder(4);
+        return simplegl::Mesh::buildSphere(5);
     }();
     return meshToRender;
 }
@@ -69,6 +76,15 @@ void processInput(bool& keep_runing) {
             else if(event.key.keysym.sym == SDLK_LEFT) {
                 rotationYIndex++;
                 rotationY = rotationStep*rotationYIndex;
+            }
+            else if(event.key.keysym.sym == SDLK_i) {
+                zoomIndex++;
+                zoom = defaultZoom + zoomIndex*zoomStep;
+            }
+            else if(event.key.keysym.sym == SDLK_o) {
+                zoomIndex--;
+                zoom = defaultZoom + zoomIndex*zoomStep;
+                if (zoom < zoomStep) zoom = zoomStep;
             }
             break;
         }
@@ -123,6 +139,7 @@ void update() {
 
             vertex = rotateX(vertex, rotationX);
             vertex = rotateY(vertex, rotationY);
+            vertex = scale(vertex, zoom*0.25);
 
             // Put camera at distance 5 from the origin
             vertex = translate(vertex, 0.0, 0.0, 5.0);
@@ -154,21 +171,32 @@ void update() {
 void render(simplegl::Window & window) {
 
     window.drawGrid(12);
-    
+
     for (unsigned i = 0; i < vertexesToRender.size(); i+=3) {
-        window.drawTriagnle(
+        window.fillTriangle(
             vertexesToRender[i].x,
             vertexesToRender[i].y,
             vertexesToRender[i + 1].x,
             vertexesToRender[i + 1].y,
             vertexesToRender[i + 2].x,
             vertexesToRender[i + 2].y,
-            colorGreen);
+            colorWhite);
+    }
+    
+    for (unsigned i = 0; i < vertexesToRender.size(); i+=3) {
+        window.drawTriangle(
+            vertexesToRender[i].x,
+            vertexesToRender[i].y,
+            vertexesToRender[i + 1].x,
+            vertexesToRender[i + 1].y,
+            vertexesToRender[i + 2].x,
+            vertexesToRender[i + 2].y,
+            colorGray);
     }
 
-    for (unsigned i = 0; i < vertexesToRender.size(); ++i) {
-        window.drawRectangle(vertexesToRender[i].x - 2 , vertexesToRender[i].y - 2, 5, 5, colorYellow);
-    }
+    // for (unsigned i = 0; i < vertexesToRender.size(); ++i) {
+    //     window.drawRectangle(vertexesToRender[i].x - 2 , vertexesToRender[i].y - 2, 5, 5, colorYellow);
+    // }
 
     window.renderColorBuffer();
     window.clearColorBuffer(0xFF000000);

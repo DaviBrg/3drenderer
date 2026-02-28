@@ -114,15 +114,15 @@ void Window::drawRectangle(int x_pos, int y_pos, int width, int height, uint32_t
 }
 
 void Window::drawLine(int x0, int y0, int x1, int y1, uint32_t color) {
-    int sideX = std::abs(x1 - x0);
-    int sideY = std::abs(y1 - y0);
+    const int sideX = std::abs(x1 - x0);
+    const int sideY = std::abs(y1 - y0);
 
-    int sideLength = sideX >= sideY ? sideX : sideY;
+    const int sideLength = sideX >= sideY ? sideX : sideY;
 
-    double stepX = (x1 - x0) / static_cast<double>(sideLength);
-    double stepY = (y1 - y0) / static_cast<double>(sideLength);
+    const double stepX = (x1 - x0) / static_cast<double>(sideLength);
+    const double stepY = (y1 - y0) / static_cast<double>(sideLength);
 
-    for (int i = 0; i < sideLength; ++i) {
+    for (int i = 0; i <= sideLength; ++i) {
         int x = x0 + std::round(i*stepX);
         int y = y0 + std::round(i*stepY);
         drawPixel(x,y,color);
@@ -130,10 +130,124 @@ void Window::drawLine(int x0, int y0, int x1, int y1, uint32_t color) {
 
 }
 
-void Window::drawTriagnle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color) {
+void Window::drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color) {
     drawLine(x0, y0, x1, y1, color);
     drawLine(x1, y1, x2, y2, color);
     drawLine(x2, y2, x0, y0, color);
+}
+
+// We fill the triangle by dividing it into a bottom flat
+// and a top flat triangles, the final result looks like this:
+//
+//          (x0,y0)
+//            /  \
+//           /     \
+//          /        \
+//         /           \
+//        /              \
+//       /                 \
+//      /                     \
+//     /                         \
+// (x1,y1) ---------------------- (mx,my)
+//    \                           /
+//     \                        /
+//      \                     /
+//       \                  /
+//        \               /
+//         \            /
+//           \        /
+//             \     /
+//              \  /
+//             (x2,y2)
+
+void Window::fillTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color) {
+
+    // Sorting triangles such that y0 < y1 < y2
+
+    if (y0 > y1) {
+        std::swap(x0, x1);
+        std::swap(y0, y1);
+    }
+
+    if (y1 > y2) {
+        std::swap(x1, x2);
+        std::swap(y1, y2);
+    }
+
+    if (y0 > y1) {
+        std::swap(x0, x1);
+        std::swap(y0, y1);
+    }
+
+    const double mx = x0 + (static_cast<double>((x2 - x0) * (y1 - y0)) / ( y2 - y0)) ;
+    const double my = y1;
+
+    fillFlatBottomTriangle(x0, y0, x1, y1, mx, my, color);
+    fillFlatTopTriangle(x1, y1, mx, my, x2, y2, color);
+}
+
+// Flat bottom triangle looks like this:
+//
+//          (x0,y0)
+//            /  \
+//           /     \
+//          /        \
+//         /           \
+//        /              \
+//       /                 \
+//      /                     \
+//     /                         \
+// (x1,y1) ---------------------- (x2,y2)
+
+void Window::fillFlatBottomTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color) {
+
+    // Slope x0,y0 -> x1,y1
+    const auto slopeStartX = (x1 - x0)/static_cast<double>(y1 - y0);
+
+    // Slope x0,y0 -> x2,y2
+    const auto slopeEndX = (x2 - x0)/static_cast<double>(y2 - y0);
+
+    double startX = x0;
+    double endX = x0;
+
+    for (int y = y0; y <= y2; ++y) {
+        drawLine(static_cast<int>(startX + 0.5), y, static_cast<int>(endX + 0.5), y, color);
+        startX += slopeStartX;
+        endX += slopeEndX;
+    }
+
+}
+
+// Flat top triangle looks like this:
+
+// (x0,y0) ---------------------- (x1,y1)
+//    \                           /
+//     \                        /
+//      \                     /
+//       \                  /
+//        \               /
+//         \            /
+//           \        /
+//             \     /
+//              \  /
+//             (x2,y2)
+
+void Window::fillFlatTopTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color) {
+
+    // Slope x0,y0 -> x2,y2
+    const auto slopeStartX = (x2 - x0)/static_cast<double>(y2 - y0);
+
+    // Slope x1,y1 -> x2,y2
+    const auto slopeEndX = (x2 - x1)/static_cast<double>(y2 - y1);
+
+    double startX = x0;
+    double endX = x1;
+
+    for (int y = y0; y <= y2; ++y) {
+        drawLine(static_cast<int>(startX + 0.5), y, static_cast<int>(endX + 0.5), y, color);
+        startX += slopeStartX;
+        endX += slopeEndX;
+    }
 }
 
 void Window::renderPresent() {

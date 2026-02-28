@@ -27,7 +27,9 @@ void drawRectangle(int x_pos, int y_pos, int width, int height, uint32_t color);
 
 void drawLine(int x0, int y0, int x1, int y1, uint32_t color);
 
-void drawTriagnle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
+void drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
+
+void fillTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
 
 void renderPresent();
 
@@ -59,6 +61,8 @@ Window(Window&&);
 Window& operator=(Window&&);
 
 private:
+void fillFlatBottomTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
+void fillFlatTopTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
 
 Window() = default;
 

@@ -1,0 +1,21 @@
+# Simple Square (Side length 2, Centered at Z=0)
+# Counter-clockwise winding order (Right-hand rule)
+
+# Vertices (X Y Z)
+v -1.0 -1.0 0.0
+v  1.0 -1.0 0.0
+v  1.0  1.0 0.0
+v -1.0  1.0 0.0
+
+# Texture Coordinates (U V)
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+
+# Vertex Normal (X Y Z) pointing back towards the camera
+vn 0.0 0.0 -1.0
+
+# Face definition (Vertex/Texture/Normal)
+# Now winding counter-clockwise: 1 -> 2 -> 3 -> 4
+f 1/1/1 2/2/1 3/3/1 4/4/1
